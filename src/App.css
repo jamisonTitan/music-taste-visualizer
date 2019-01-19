@@ -3,3 +3,7 @@ html {
   justify-content: center;
   margin: auto;
 }
+
+body {
+  background-color: darkGrey;
+}
