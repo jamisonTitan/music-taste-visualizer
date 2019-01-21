@@ -111,7 +111,7 @@ class App extends Component {
       </div> : <button onClick={() => {
         window.location = window.location.href.includes('localhost')
         ? 'http://localhost:8888/login'
-        : 'https://naive-react-app-backend.herokuapp.com/'}}
+        : 'https://naive-react-app-backend.herokuapp.com/login'}}
       style={btnStyle}>Sign in with spotify</button>
     }
     </div>
