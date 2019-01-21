@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import './App.css';
 import queryString from 'query-string';
 
-let styleOne = {color:'#909', 'fontSize': '24px'};
-let styleTwo = {color:'#990', 'fontSize': '20px'};
+let styleOne = {color:'#303', 'fontSize': '24px'};
+let styleTwo = {color:'#330', 'fontSize': '20px'};
 let btnStyle = {padding: '20px', 'fontSize': '54px', 'marginTop':'20px'}
 
 class PlaylistCounter extends Component {
@@ -105,6 +105,8 @@ class App extends Component {
         <Filter onTextChange={text => {
             this.setState({filterString: text})
           }}/>
+      <PlaylistCounter playlists={playlistToRender}/>
+      <HoursCounter playlists={playlistToRender}/>
       {playlistToRender.map(playlist =>
         <Playlist playlist={playlist} />
       )}
