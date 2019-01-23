@@ -18,11 +18,12 @@ class PlaylistCounter extends Component {
 
 class HoursCounter extends Component {
   render() {
-    let allSongs = this.props.playlists.reduce((songs, eachPlaylist) => {
-      return songs.concat(eachPlaylist.songs)
+    let songsToDisplay = this.props.playlists.reduce((songsToDisplay, playlists) => {
+      return songsToDisplay.concat(playlists.songsToDisplay)
     }, [])
-    let totalDuration = allSongs.reduce((sum, eachSong) => {
-      return sum + eachSong.duration
+    let totalDuration = songsToDisplay.reduce((sum, song) => {
+      console.log(song.duration);
+      return sum + song.duration
     }, 0)
     return (
       <div style={{...styleOne, width: "40%", display: 'inline-block'}}>
@@ -50,6 +51,7 @@ class App extends Component {
     this.state = { filterString: ''};
   }
   componentDidMount() {
+    let playlists;
     let parsed = queryString.parse(window.location.search);
       let accessToken = parsed.access_token;
       if (!accessToken)
@@ -57,7 +59,8 @@ class App extends Component {
       console.log(accessToken);
       fetch('https://api.spotify.com/v1/me',{
         headers: {'authorization': `Bearer ${accessToken}`}
-      }).then(response => response.json())
+      })
+      .then(response => response.json())
       .then(data => {
         console.log(data)
         this.setState({
@@ -67,27 +70,55 @@ class App extends Component {
         });
       });
 
-      fetch('https://api.spotify.com/v1/me/playlists',{
-        headers: {'authorization': `Bearer ${accessToken}`}
+      fetch('https://api.spotify.com/v1/me/playlists', {
+        headers: {'Authorization': 'Bearer ' + accessToken}
       }).then(response => response.json())
-      .then(data => {
+      .then(playlistData => {
+        console.log(playlistData.items);
+        playlists = playlistData.items;
+        let trackDataPromises = playlists.map(playlist => {
+          let responsePromise = fetch(playlist.tracks.href, {
+            headers: {'Authorization': 'Bearer ' + accessToken}
+          })
+          let trackDataPromise = responsePromise
+            .then(response => response.json())
+          return trackDataPromise
+        })
+        let allTracksDataPromises =
+          Promise.all(trackDataPromises)
+        let playlistsPromise = allTracksDataPromises.then(trackDatas => {
+          trackDatas.forEach((trackData, i) => {
+            playlists[i].trackDatas = trackData.items
+              .map(item => item.track)
+              .map(trackData => ({
+                name: trackData.name,
+                duration: trackData.duration_ms / 1000,
+                uri: trackData.uri.split(':')[2]
+              }))
+          })
+          return playlists;
+        })
+        return playlistsPromise;
+  })
+      .then(playlists => {
           this.setState({
-            playlists: data.items.map(item => {
-              console.log(item)
+            playlists: playlists.map(item => {
               return {
-                name: item.name,
-                imageURL: item.images[0].url,
-                songs: []
+                  name: item.name,
+                  imageURL: item.images[0].url,
+                  songsToDisplay: item.trackDatas.slice(0,3),
+                  songs: item.trackDatas
               }
             }),
           });
       });
+      console.log(playlists);
 
   }
 
 
   render() {
-    let playlistToRender =
+    let playlistsToRender =
        this.state.user &&
        this.state.playlists
          ? this.state.playlists.filter(playlist =>
@@ -105,9 +136,9 @@ class App extends Component {
         <Filter onTextChange={text => {
             this.setState({filterString: text})
           }}/>
-      <PlaylistCounter playlists={playlistToRender}/>
-      <HoursCounter playlists={playlistToRender}/>
-      {playlistToRender.map(playlist =>
+      <PlaylistCounter playlists={playlistsToRender}/>
+      <HoursCounter playlists={playlistsToRender}/>
+      {playlistsToRender.map(playlist =>
         <Playlist playlist={playlist} />
       )}
       </div> : <button onClick={() => {
@@ -117,19 +148,57 @@ class App extends Component {
       style={btnStyle}>Sign in with spotify</button>
     }
     </div>
+
     );
   }
 }
 
 class Playlist extends Component {
+  constructor() {
+    super();
+    this.state = {
+        songAudioData: {
+              danceability: 0,
+              acousticness: 0,
+              energy: 0,
+              instrumentalness: 0,
+              loudness: 0,
+              valence: 0,
+              bpm: 0
+            },
+      };
+  }
+
   render() {
-    let playlist = this.props.playlist
+    let parsed = queryString.parse(window.location.search);
+    let accessToken = parsed.access_token;
+    let playlist = this.props.playlist;
+    let length = 7;
+    playlist.songs.forEach((song, i) => {
+      fetch(`https://api.spotify.com/v1/audio-features/${playlist.songs[i].uri}`,{
+        headers: {'authorization': `Bearer ${accessToken}`}
+      })
+      .then(response => response.json())
+      .then(data => {
+      this.state.songAudioData.danceability += data.danceability;
+      this.state.songAudioData.acousticness += data.acousticness;
+      this.state.songAudioData.energy += data.energy;
+      this.state.songAudioData.instrumentalness += data.instrumentalness;
+      this.state.songAudioData.loudness += data.loudness;
+      this.state.songAudioData.valence += data.valence;
+      this.state.songAudioData.bpm +=  data.tempo;
+      });
+    });
+
     return (
-      <div style={{...styleOne, display: 'inline-block', width: "25%"}}>
-        <img src={playlist.imageURL} style={{width: '60px', height: '60px', padding: '12px'}}/>
+      <div style={{...styleOne, display: 'inline-block',
+      width: "100%", display: 'flex', 'justifyContent':'left'}}>
+        <div>
+        <img src={playlist.imageURL} style={{width: '120px', height: '120px', padding: '12px'}}/>
         <h3>{playlist.name}</h3>
+        </div>
         <ul>
-          {playlist.songs.map(song =>
+          {playlist.songsToDisplay.map(song =>
             <li>{song.name}</li>
           )}
         </ul>
