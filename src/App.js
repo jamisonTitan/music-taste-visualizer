@@ -298,31 +298,37 @@ class Playlist extends Component {
   }
   render() {
     let playlist = this.props.playlist;
+    let danceability = Math.floor(this.state.averages.danceability * 100),
+      energy = Math.floor(this.state.averages.energy * 100),
+      loudness = Math.floor((this.state.averages.loudness + 60) * (100/60)),
+      acousticness = Math.floor(this.state.averages.acousticness * 100),
+      valence = Math.floor(this.state.averages.valence * 100);
     return (
-      <div style={{...styleOne, display: 'inline-block',
-      width: "100%", display: 'flex', 'justifyContent':'left'}}>
+      <div>
         <h2>{playlist.name}</h2>
-        <img src={playlist.imageURL} style={{width: '120px', height: '120px', padding: '12px'}}/>
-        <ul style={{width:'50%'}}>
-        <li> {Math.floor(this.state.averages.danceability * 100)}</li>
-        <li><Line percent={Math.floor(this.state.averages.danceability * 100)} strokeWidth="4" trailWidth='4'
-        trailColor='#b3b3b3' strokeColor="#800080"/>{Math.floor(this.state.averages.danceability * 100)}</li>
-        <li><Line percent={Math.floor(this.state.averages.energy * 100)} strokeWidth="4" trailWidth='4'
-        trailColor='#b3b3b3' strokeColor="rgb(220,20,60)"/>{Math.floor(this.state.averages.energy * 100)}</li>
-        <li><Line percent={Math.floor((this.state.averages.loudness + 60) * (100/60))} strokeWidth="4" trailWidth='4'
-        trailColor='#b3b3b3' strokeColor="#000"/>{Math.floor((this.state.averages.loudness + 60) * (100/60))}</li>
-        <li><Line percent={Math.floor(this.state.averages.acousticness * 100)} strokeWidth="4" trailWidth='4'
-        trailColor='#b3b3b3' strokeColor="rgb(255,228,181)"/>{this.state.averages.acousticness * 100}</li>
-        <li><Line percent={Math.floor(this.state.averages.valence * 100)} strokeWidth="4" trailWidth='4'
-        trailColor='#b3b3b3' strokeColor="rgb(50,205,50)"/>{Math.floor(this.state.averages.valence * 100)}</li>
-        </ul>
-        <ul>
-
-        {playlist.songsToDisplay.map(song =>
-            <li>{song.name}</li>
-          )}
-        </ul>
-      </div>
+            <ul style={{width:'50%'}}>
+            <li>{`danceability: ${danceability}`}</li>
+            <li><Line percent={danceability} strokeWidth="4" trailWidth='4'
+            trailColor='#b3b3b3' strokeColor="#800080"/></li>
+            <li>{`energy: ${energy}`}</li>
+            <li><Line percent={energy} strokeWidth="4" trailWidth='4'
+            trailColor='#b3b3b3' strokeColor="rgb(220,20,60)"/></li>
+            <li>{`loudness: ${loudness}`}</li>
+            <li><Line percent={loudness} strokeWidth="4" trailWidth='4'
+            trailColor='#b3b3b3' strokeColor="#000"/></li>
+            <li>{`acousticness: ${acousticness}`}</li>
+            <li><Line percent={acousticness} strokeWidth="4" trailWidth='4'
+            trailColor='#b3b3b3' strokeColor="rgb(255,228,181)"/></li>
+            <li>{`valence: ${valence}`}</li>
+            <li><Line percent={valence} strokeWidth="4" trailWidth='4'
+            trailColor='#b3b3b3' strokeColor="rgb(50,205,50)"/></li>
+            </ul>
+          <ul>
+          {playlist.songsToDisplay.map(song =>
+              <li>{song.name}</li>
+            )}
+          </ul>
+        </div>
     );
   }
 }
